@@ -34,105 +34,142 @@ int rawcheck(TString finName = "./data/Run010-747-021.dat"){
     unsigned short  adcs[128];
 
 
+    for(int ev=0;ev<100000;++ev){
 
         file.read(( char*) &buf, 4);  // e7 e7 00 00
-        if(buf[0]==0xe7 && buf[1]==0xe7 && buf[2]==0x00 && buf[3]==0x00) cout << "packet start" << endl;
-        file.read(( char*) &packetSize, 4); // packetSize 00 00 02 cc
+        cout << "Magic:"<< (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
+        if( !(buf[0]==0xe7 && buf[1]==0xe7 && buf[2]==0x00 && buf[3]==0x00)){
+            cout << "Magic Number Wrong" << endl;
+            return -1;
+        }
+
+        file.read(( char*) &packetSize, 4); // packetSize
         packetSize = htonl(packetSize);
-        cout << packetSize << endl;
+        cout << "pacsize" << packetSize << endl;
+        
+        file.read(( char*) &buf, 4);  // Packet Flug
 
-        file.read(( char*) &buf, 4);  // 01 00 00 00
-        if(buf[0]==0x01 && buf[1]==0x00 && buf[2]==0x00 && buf[3]==0x00) cout << "Packet Flag" << endl;
-
-        file.read(( char*) &fileInfo, packetSize-4);
-        string sHeader(fileInfo, packetSize); //4 bytes are used for packet flag
-        cout << sHeader << endl;
-
-        file.read(( char*) &buf, 4);
-        cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
-        if(buf[0]==0xcc && buf[1]==0xcc && buf[2]==0x00 && buf[3]==0x00) cout << "packet stop" << endl;
-
-        file.read(( char*) &eventNumber, 4); // eventNumber
-        eventNumber = htonl(eventNumber);
-        cout << eventNumber << endl;
-
-        // Event start
-
-
-        file.read(( char*) &buf, 4);
-        if(buf[0]==0xe7 && buf[1]==0xe7 && buf[2]==0x00 && buf[3]==0x00) cout << "packet start" << endl;
-
-        file.read(( char*) &packetSize, 4); // packetSize 00 00 c1 80 = 49536
-        packetSize = htonl(packetSize);
-        cout << packetSize << endl;
-
-        file.read(( char*) &buf, 4);  // 00 xx 01 00  xx--current buffer ID
-        if(buf[0]==0x00 && buf[2]==0x01 && buf[3]==0x00) cout << "Used buffer:" <<(int)buf[1] << endl;
-
-        file.read(( char*) &buf, 2);  // aaaa
-        file.read(( char*) &buf, 2);  // 0 0 0 0
-        file.read(( char*) &buf, 1);  // MCHs -- 04
-        cout << (int)buf[0] << endl;  // 04
-        int numOfMch = buf[0];
-        file.read(( char*) &buf, 3);  // 00 00 00
-
-        file.read(( char*) &buf, 4);  // 00 00 00 00
-        file.read(( char*) &buf, 1);  // c4
-        cout << (int)buf[0] << endl;  // 196
-        file.read(( char*) &buf, 3);  // 00 00 00
-
-        file.read(( char*) &buf, 4);     // Event Number
-        file.read(( char*) &buf, 4*32);  // Counter
-        file.read(( char*) &buf, 4*5);   // Trigger
-        file.read(( char*) &buf, 4*7);   // Reserve
-
-        for(int j=0;j<numOfMch;++j){ 
-            // --------> Header of MCH
-            file.read(( char*) &buf, 4);
-            cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
-            //bb bb 00 00 
+        if(buf[0]==0x01 && buf[1]==0x00 && buf[2]==0x00 && buf[3]==0x00){ 
+            cout << "File Header " << endl;
+            // File Header
+            file.read(( char*) &fileInfo, packetSize-4);
+            string sHeader(fileInfo, packetSize); //4 bytes are used for packet flag
+            cout << "sHeader" << sHeader << endl;
 
             file.read(( char*) &buf, 4);
             cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
-            cout << "num of fadc" << (int)buf[0] << endl;
-            cout << "MCH_ID"      << (int)buf[1] << endl;
-            int numOfFadc = (int)buf[0];
+            if(buf[0]==0xcc && buf[1]==0xcc && buf[2]==0x00 && buf[3]==0x00) cout << "packet stop" << endl;
+
+            file.read(( char*) &eventNumber, 4); // eventNumber
+            eventNumber = htonl(eventNumber);
+            cout << "ev#" << eventNumber << endl;
+
+        } else if(buf[0]==0x02 && buf[1]==0x00 && buf[2]==0x00 && buf[3]==0x00){ 
+            cout << "File Footer " << endl;
+            //File Footer
+            file.read(( char*) &fileInfo, packetSize-4);
+            string sHeader(fileInfo, packetSize); //4 bytes are used for packet flag
+            cout << "sHeader" << sHeader << endl;
 
             file.read(( char*) &buf, 4);
-            file.read(( char*) &bufint, 4);
-            cout << "sub_packetSize" << htonl(bufint) << endl;
-            file.read(( char*) &bufint, 4);     // Event Number
-            cout << htonl(bufint) << endl;
+            cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
+            if(buf[0]==0xcc && buf[1]==0xcc && buf[2]==0x00 && buf[3]==0x00) cout << "packet stop" << endl;
+
+            file.read(( char*) &eventNumber, 4); // eventNumber
+            eventNumber = htonl(eventNumber);
+            cout <<"ev#" << eventNumber << endl;
+
+            break;
+
+        } else if(buf[2]==0x01 && buf[3]==0x00){ 
+            //Event
+            cout << "Events" << endl;
+            cout << "Used buffer:" <<(int)buf[1] << endl;
+
+            file.read(( char*) &buf, 2);  // aaaa
+            file.read(( char*) &buf, 2);  // 0 0 0 0
+            file.read(( char*) &buf, 1);  // MCHs -- 04
+            cout << "used buf" << (int)buf[0] << endl;  // 04
+            int numOfMch = buf[0];
+            file.read(( char*) &buf, 3);  // 00 00 00
+
+            file.read(( char*) &buf, 4);  // 00 00 00 00
+            file.read(( char*) &buf, 1);  // c4
+            cout <<"nazo" <<  (int)buf[0] << endl;  // 196
+            file.read(( char*) &buf, 3);  // 00 00 00
+
+            file.read(( char*) &buf, 4);     // Event Number
             file.read(( char*) &buf, 4*32);  // Counter
             file.read(( char*) &buf, 4*5);   // Trigger
             file.read(( char*) &buf, 4*7);   // Reserve
-            // <-------- Header of MCH
 
-            for(int i=0;i<numOfFadc;++i){
-                // ---------> 1PMT
+            for(int j=0;j<numOfMch;++j){ 
+                // --------> Header of MCH
                 file.read(( char*) &buf, 4);
-                cout << "fADC ID " << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
-                file.read(( char*) &bufint, 4);
-                cout << "trigger count" << htonl(bufint) << endl;
-                file.read(( char*) &bufint, 4);
-                cout << "Timestamp fine" << htonl(bufint) << endl;
-                file.read(( char*) &bufint, 4);
-                cout << "Timestamp coarse" << htonl(bufint) << endl;
+                cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
+                //bb bb 00 00 
 
-                file.read(( char*) &adcf, 1*384);
-                file.read(( char*) &adcs, 2*128);
-                // <---------
-            }
+                file.read(( char*) &buf, 4);
+                cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
+                cout << "num of fadc" << (int)buf[0] << endl;
+                cout << "MCH_ID"      << (int)buf[1] << endl;
+                int numOfFadc = (int)buf[0];
 
+                file.read(( char*) &buf, 4);
+                file.read(( char*) &bufint, 4);
+                cout << "sub_packetSize" << htonl(bufint) << endl;
+                file.read(( char*) &bufint, 4);     // Event Number
+                cout << "bufEv" << htonl(bufint) << endl;
+                file.read(( char*) &buf, 4*32);  // Counter
+                file.read(( char*) &buf, 4*5);   // Trigger
+                file.read(( char*) &buf, 4*7);   // Reserve
+                // <-------- Header of MCH
+
+                for(int i=0;i<numOfFadc;++i){
+                    file.read(( char*) &buf, 4);
+                    cout << "Event#" << ev << " fADC ID " << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
+                    file.read(( char*) &bufint, 4);
+                    //cout << "trigger count" << htonl(bufint) << endl;
+                    file.read(( char*) &bufint, 4);
+                    //cout << "Timestamp fine" << htonl(bufint) << endl;
+                    file.read(( char*) &bufint, 4);
+                    //cout << "Timestamp coarse" << htonl(bufint) << endl;
+
+                    file.read(( char*) &adcf, 1*384);
+                    file.read(( char*) &adcs, 2*128);
+
+                } //1PMT end
+            } //MCH end
+
+            file.read(( char*) &buf, 4);   // FF FF BB BB
+            cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
+            file.read(( char*) &buf, 4);   // FF FF BB BB
+            cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
+            file.read(( char*) &buf, 4);   // CC CC 00 00 
+            cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
+            file.read(( char*) &buf, 4);   // Event number
+            cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
+
+            cout << "Event END" << endl;
+
+        } // Event end
+        else{
+            cout << "UNKNOWN FLAG" << endl;
+            file.read(( char*) &fileInfo, packetSize);
+            file.read(( char*) &buf, 4);   // Event number
+            cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
+
+            cout << "Event END" << endl;
         }
+    } // Loop end
 
-
+    
     Int_t adcf_i[384];
     Int_t adcs_i[128];
 
     for(int i=0;i<384;++i){ adcf_i[i] = adcf[i];}
     for(int i=0;i<128;++i){ adcs_i[i] = adcs[i]/32;}
-    
+
     Int_t time[384];
     for(int i=0;i<384;++i){ time[i]=i; }
 
@@ -146,25 +183,7 @@ int rawcheck(TString finName = "./data/Run010-747-021.dat"){
 
 
 
-
-    file.read(( char*) &buf, 4);
-    cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
-    file.read(( char*) &buf, 4);
-    cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
-    file.read(( char*) &buf, 4);
-    cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
-    file.read(( char*) &buf, 4);
-    cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
-    file.read(( char*) &buf, 4);
-    cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
-    file.read(( char*) &buf, 4);
-    cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
-    file.read(( char*) &buf, 4);
-    cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
-    file.read(( char*) &buf, 4);
-    cout << (int)buf[0] << " " << (int)buf[1] <<  " " << (int)buf[2] <<  " " << (int)buf[3] << endl;
-
     return 0;
 
 }
-                                                
+
