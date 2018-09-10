@@ -10,7 +10,7 @@
 
 #include <arpa/inet.h>
 
-int rawcheck(TString finName = "./data/Ped010-747-001.dat"){
+int rawcheck(TString finName = "../data/Ped010-747-001.dat"){
 
     std::ifstream file;
     file.open(finName, ios::in | ios::binary);
@@ -116,11 +116,13 @@ int rawcheck(TString finName = "./data/Ped010-747-001.dat"){
                     file.read(( char*) &bufint, 4);
                     file.read(( char*) &bufint, 4);
 
-                    file.read(( char*) &adcf, 1*384);
-                    file.read(( char*) &adcs, 2*128);
+                    file.read(( char*) &adc2ns[fpgaId], 1*384);
+                    file.read(( char*) &adc64ns[fpgaId], 2*128);
 
-                    for(int k=0;k<384;++k){adc2ns[fpgaId][k] = adcf[k];}
-                    for(int k=0;k<128;++k){adc64ns[fpgaId][k] = adcs[k];}
+                    //file.read(( char*) &adcf, 1*384);
+                    //file.read(( char*) &adcs, 2*128);
+                    //for(int k=0;k<384;++k){adc2ns[fpgaId][k] = adcf[k];}
+                    //for(int k=0;k<128;++k){adc64ns[fpgaId][k] = adcs[k];}
 
                     fpgaId++;
                 } //1PMT end

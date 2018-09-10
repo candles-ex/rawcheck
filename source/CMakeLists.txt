@@ -23,11 +23,8 @@ add_executable(rawcheck src/rawcheck.cxx ${sources} ${headers})
 target_link_libraries(rawcheck ${ROOT_LIBRARIES})
 
 set(CMAKE_INSTALL_PREFIX "..")
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -pg")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG -march=native")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g3 -Og -pg")
-set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -s -DNDEBUG -march=native")
+# set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -pg -Wall -Wextra")
 
 add_custom_target(RAWCHECK DEPENDS rawcheck)
 install(TARGETS rawcheck DESTINATION bin)

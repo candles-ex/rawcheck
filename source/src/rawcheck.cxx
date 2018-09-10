@@ -19,9 +19,27 @@
 
 int main(int argc, char** argv){
 
-    TString finName = "./data/Ped010-747-001.dat";
+    TString finName;
+    TString inDirName  = "/Users/mzks/candles/rawcheck/data/";
+    TString outDirName = "/Users/mzks/candles/rawcheck/rootfile/";
+
+    if (argc >= 2){
+        finName = argv[1];
+    }
+    if (argc >= 3){
+        outDirName = argv[2];
+    }
+    if (argc == 4){
+        inDirName = argv[3];
+    }
+    if (argc <= 1 || argc >= 5){
+        std::cout << "Usage : % ./rawcheck <filename> (output dir) (input dir)" << std::endl;
+        std::cout << "e.g., ./rawcheck Run010-747-021 ./output/ ./input/" << std::endl;
+        return -1;
+    }
+
     std::ifstream file;
-    file.open(finName, std::ios::in | std::ios::binary);
+    file.open(inDirName+finName+".dat", std::ios::in | std::ios::binary);
 
     if(file.is_open()){
         std::cout << "file open " << finName << std::endl;
@@ -36,9 +54,6 @@ int main(int argc, char** argv){
     Int_t  bufint;
     Int_t  packetSize;
     Int_t  eventNumber;
-    Int_t subPacketSize;
-    unsigned char   adcf[384];
-    unsigned short  adcs[128];
 
     // data
     unsigned char  adc2ns [74][384];
@@ -47,12 +62,14 @@ int main(int argc, char** argv){
 
 
     auto tree = new TTree("tree","tree");
+    tree->Branch("eventID", &evId, "evId/I");
     tree->Branch("adc2ns", adc2ns, "adc2ns[74][384]/b");
     tree->Branch("adc64ns", adc64ns, "adc64ns[74][128]/s");
-    tree->Branch("eventID", &evId, "evId/I");
 
 
-    for(int ev=0;ev<100000;++ev){
+    for(int ev=0;ev<10000000;++ev){
+
+        if(ev%1000==0)std::cout << "Event #" << ev << std::endl;
 
         file.read(( char*) &buf, 4);  // e7 e7 00 00
         if( !(buf[0]==0xe7 && buf[1]==0xe7 && buf[2]==0x00 && buf[3]==0x00)){
@@ -119,16 +136,13 @@ int main(int argc, char** argv){
                 // <-------- Header of MCH
 
                 for(int i=0;i<numOfFadc;++i){
-                    file.read(( char*) &buf, 4);
-                    file.read(( char*) &bufint, 4);
-                    file.read(( char*) &bufint, 4);
-                    file.read(( char*) &bufint, 4);
+                    file.read(( char*) &buf, 4);    // FADC_ID 00 00 00
+                    file.read(( char*) &bufint, 4); // Trigger Counts
+                    file.read(( char*) &bufint, 4); // Timestamp Fine
+                    file.read(( char*) &bufint, 4); // Timestamp Coarse
 
-                    file.read(( char*) &adcf, 1*384);
-                    file.read(( char*) &adcs, 2*128);
-
-                    for(int k=0;k<384;++k){adc2ns[fpgaId][k] = adcf[k];}
-                    for(int k=0;k<128;++k){adc64ns[fpgaId][k] = adcs[k];}
+                    file.read(( char*) &adc2ns[fpgaId], 1*384);
+                    file.read(( char*) &adc64ns[fpgaId], 2*128);
 
                     fpgaId++;
                 } //1PMT end
@@ -152,7 +166,7 @@ int main(int argc, char** argv){
     } // Loop end
 
 
-    auto f = new TFile("out.root","recreate");
+    auto f = new TFile(outDirName+finName+".root","recreate");
     tree->Write();
     f->Close();
 
